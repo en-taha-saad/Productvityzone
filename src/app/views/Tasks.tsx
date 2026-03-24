@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, Plus, ListFilter, Tag, Calendar, CheckCircle2, Circle, Clock, MoreVertical, X, Check } from "lucide-react";
 import { cn } from "../../utils/cn";
 
@@ -6,6 +6,7 @@ const MOCK_TASKS = [
   { id: 1, title: "task 2", description: "description 2", priority: "Medium", status: "To Do", date: "3/24/2026", tags: ["tag 2"] },
   { id: 2, title: "task 1", description: "description 1", priority: "Low", status: "To Do", date: "3/24/2026", tags: ["tag 1"] },
   { id: 3, title: "Complete project PRD", description: "Finalize the documentation for version 1.0", priority: "High", status: "In Progress", date: "3/25/2026", tags: ["work", "planning"] },
+  { id: 4, title: "Review design system", description: "Go over the latest component updates", priority: "Urgent", status: "Done", date: "3/23/2026", tags: ["design"] },
 ];
 
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
@@ -14,15 +15,41 @@ const STATUSES = ["To Do", "In Progress", "Done", "Archived"];
 export function Tasks() {
   const [selectedTask, setSelectedTask] = useState(MOCK_TASKS[0]);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Filter state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{ status: string[], priority: string[] }>({
+    status: [],
+    priority: [],
+  });
+
+  const toggleFilter = (type: 'status' | 'priority', value: string) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [type]: prev[type].includes(value) 
+        ? prev[type].filter(v => v !== value)
+        : [...prev[type], value]
+    }));
+  };
+
+  const filteredTasks = useMemo(() => {
+    return MOCK_TASKS.filter(task => {
+      const matchStatus = activeFilters.status.length === 0 || activeFilters.status.includes(task.status);
+      const matchPriority = activeFilters.priority.length === 0 || activeFilters.priority.includes(task.priority);
+      return matchStatus && matchPriority;
+    });
+  }, [activeFilters]);
+
+  const activeFilterCount = activeFilters.status.length + activeFilters.priority.length;
 
   const PriorityBadge = ({ p }: { p: string }) => {
-    const colors = {
+    const colors: Record<string, string> = {
       Low: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10",
       Medium: "text-blue-400 border-blue-500/20 bg-blue-500/10",
       High: "text-orange-400 border-orange-500/20 bg-orange-500/10",
       Urgent: "text-red-400 border-red-500/20 bg-red-500/10",
-    }[p] || "text-slate-400 border-slate-500/20 bg-slate-500/10";
-    return <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", colors)}>{p}</span>;
+    };
+    return <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", colors[p] || "text-slate-400 border-slate-500/20 bg-slate-500/10")}>{p}</span>;
   };
 
   const StatusBadge = ({ s }: { s: string }) => {
@@ -36,19 +63,111 @@ export function Tasks() {
     <div className="flex h-full bg-slate-950 text-slate-200">
       {/* List / Master View */}
       <div className="w-1/3 min-w-[320px] max-w-[400px] border-r border-slate-800 bg-slate-900 flex flex-col h-full">
-        <div className="p-4 border-b border-slate-800 flex flex-col gap-4 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+        <div className="p-4 border-b border-slate-800 flex flex-col gap-4 sticky top-0 bg-slate-900/95 backdrop-blur z-20">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold tracking-tight text-white flex items-center gap-2">
               Tasks
-              <span className="text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400 font-medium border border-slate-700">{MOCK_TASKS.length}</span>
+              <span className="text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400 font-medium border border-slate-700">{filteredTasks.length}</span>
             </h1>
             <div className="flex gap-2">
               <button className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                 <Search size={18} />
               </button>
-              <button className="w-8 h-8 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-                <ListFilter size={18} />
-              </button>
+              
+              {/* Filter Dropdown Container */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-colors relative",
+                    isFilterOpen || activeFilterCount > 0
+                      ? "bg-indigo-500/20 text-indigo-400" 
+                      : "hover:bg-slate-800 text-slate-400 hover:text-white"
+                  )}
+                >
+                  <ListFilter size={18} />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-indigo-500 rounded-full border-2 border-slate-900" />
+                  )}
+                </button>
+
+                {isFilterOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsFilterOpen(false)} 
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl py-3 px-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-5">
+                        {/* Status Filter */}
+                        <div>
+                          <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Status</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {STATUSES.map(s => {
+                              const isActive = activeFilters.status.includes(s);
+                              return (
+                                <button 
+                                  key={s} 
+                                  onClick={() => toggleFilter('status', s)}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-md border text-xs font-medium transition-colors flex items-center gap-1.5",
+                                    isActive 
+                                      ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300" 
+                                      : "border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500"
+                                  )}
+                                >
+                                  {isActive && <Check size={12} />}
+                                  {s}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Priority Filter */}
+                        <div>
+                          <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Priority</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {PRIORITIES.map(p => {
+                              const isActive = activeFilters.priority.includes(p);
+                              return (
+                                <button 
+                                  key={p} 
+                                  onClick={() => toggleFilter('priority', p)}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-md border text-xs font-medium transition-colors flex items-center gap-1.5",
+                                    isActive 
+                                      ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300" 
+                                      : "border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500"
+                                  )}
+                                >
+                                  {isActive && <Check size={12} />}
+                                  {p}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 pt-3 border-t border-slate-700 flex justify-between items-center">
+                        <button 
+                          onClick={() => setActiveFilters({ status: [], priority: [] })}
+                          className="text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                        >
+                          Clear all
+                        </button>
+                        <button 
+                          onClick={() => setIsFilterOpen(false)}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition-colors font-medium shadow-sm shadow-indigo-500/20"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           
@@ -56,59 +175,97 @@ export function Tasks() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input 
               type="text" 
-              placeholder="Filter tasks..." 
+              placeholder="Filter tasks by text..." 
               className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
             />
           </div>
+
+          {/* Active filter chips indicator below search if any */}
+          {activeFilterCount > 0 && (
+            <div className="flex gap-2 flex-wrap pb-1">
+              {activeFilters.status.map(s => (
+                <span key={s} className="text-[10px] px-2 py-1 rounded-md border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 flex items-center gap-1">
+                  {s}
+                  <button onClick={() => toggleFilter('status', s)} className="hover:text-white"><X size={10} /></button>
+                </span>
+              ))}
+              {activeFilters.priority.map(p => (
+                <span key={p} className="text-[10px] px-2 py-1 rounded-md border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 flex items-center gap-1">
+                  {p}
+                  <button onClick={() => toggleFilter('priority', p)} className="hover:text-white"><X size={10} /></button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-1">Today</div>
-          {MOCK_TASKS.map(task => (
-            <button
-              key={task.id}
-              onClick={() => setSelectedTask(task)}
-              className={cn(
-                "w-full text-left p-4 rounded-xl border transition-all relative overflow-hidden group",
-                selectedTask.id === task.id 
-                  ? "bg-slate-800 border-indigo-500/50 shadow-sm" 
-                  : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50"
-              )}
-            >
-              {selectedTask.id === task.id && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
-              )}
-              
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0">
-                  <Circle size={18} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={cn("font-medium truncate mb-1", selectedTask.id === task.id ? "text-white" : "text-slate-200")}>
-                    {task.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 truncate mb-3">{task.description}</p>
+          {filteredTasks.length > 0 ? (
+            <>
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-1">Today</div>
+              {filteredTasks.map(task => (
+                <button
+                  key={task.id}
+                  onClick={() => setSelectedTask(task)}
+                  className={cn(
+                    "w-full text-left p-4 rounded-xl border transition-all relative overflow-hidden group",
+                    selectedTask?.id === task.id 
+                      ? "bg-slate-800 border-indigo-500/50 shadow-sm" 
+                      : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50"
+                  )}
+                >
+                  {selectedTask?.id === task.id && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
+                  )}
                   
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <PriorityBadge p={task.priority} />
-                    <div className="flex items-center text-[10px] text-slate-500 gap-1">
-                      <Clock size={10} /> {task.date}
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "mt-0.5 transition-colors shrink-0", 
+                      task.status === 'Done' ? "text-emerald-500" : "text-slate-500 group-hover:text-indigo-400"
+                    )}>
+                      {task.status === 'Done' ? <CheckCircle2 size={18} /> : <Circle size={18} />}
                     </div>
-                    {task.tags.map(tag => (
-                      <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full border border-pink-500/20 bg-pink-500/10 text-pink-400 font-medium">
-                        {tag}
-                      </span>
-                    ))}
+                    <div className="flex-1 min-w-0">
+                      <h3 className={cn("font-medium truncate mb-1", selectedTask?.id === task.id ? "text-white" : "text-slate-200", task.status === 'Done' && "line-through text-slate-500")}>
+                        {task.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 truncate mb-3">{task.description}</p>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <PriorityBadge p={task.priority} />
+                        <div className="flex items-center text-[10px] text-slate-500 gap-1">
+                          <Clock size={10} /> {task.date}
+                        </div>
+                        {task.tags.map(tag => (
+                          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full border border-pink-500/20 bg-pink-500/10 text-pink-400 font-medium">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </button>
+              ))}
+            </>
+          ) : (
+            <div className="text-center py-10">
+              <div className="w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-3 text-slate-500">
+                <ListFilter size={20} />
               </div>
-            </button>
-          ))}
+              <p className="text-sm font-medium text-slate-400">No tasks match your filters</p>
+              <button 
+                onClick={() => setActiveFilters({ status: [], priority: [] })}
+                className="text-xs text-indigo-400 mt-2 hover:text-indigo-300"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Detail View */}
-      <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative">
+      <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative z-0">
         {selectedTask ? (
           <>
             <div className="h-16 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 bg-slate-900/50 backdrop-blur sticky top-0 z-10">
@@ -116,7 +273,7 @@ export function Tasks() {
                 <button 
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                    isEditing ? "bg-indigo-600 border-indigo-500 text-white" : "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
+                    isEditing ? "bg-indigo-600 border-indigo-500 text-white shadow-sm shadow-indigo-500/20" : "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
                   )}
                   onClick={() => setIsEditing(!isEditing)}
                 >
@@ -136,7 +293,12 @@ export function Tasks() {
                 {/* Title & Desc */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
-                    <button className="mt-1 w-6 h-6 rounded border-2 border-slate-600 hover:border-indigo-400 hover:bg-indigo-500/10 flex items-center justify-center transition-colors text-transparent hover:text-indigo-400 shrink-0">
+                    <button className={cn(
+                      "mt-1 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors shrink-0",
+                      selectedTask.status === 'Done' 
+                        ? "bg-emerald-500 border-emerald-500 text-white" 
+                        : "border-slate-600 hover:border-indigo-400 hover:bg-indigo-500/10 text-transparent hover:text-indigo-400"
+                    )}>
                       <Check size={14} className="stroke-[3]" />
                     </button>
                     <div className="flex-1">
@@ -147,7 +309,9 @@ export function Tasks() {
                           className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-xl font-semibold text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                         />
                       ) : (
-                        <h2 className="text-3xl font-bold tracking-tight text-white">{selectedTask.title}</h2>
+                        <h2 className={cn("text-3xl font-bold tracking-tight", selectedTask.status === 'Done' ? "text-slate-400 line-through" : "text-white")}>
+                          {selectedTask.title}
+                        </h2>
                       )}
                     </div>
                   </div>
