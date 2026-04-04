@@ -13,8 +13,16 @@ const MOCK_TASKS = [
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
 const STATUSES = ["To Do", "In Progress", "Done", "Archived"];
 
+const AVAILABLE_TAGS = ["Engineering", "Personal", "Health", "Product", "Research", "Finance", "Design"];
+const AVAILABLE_NOTES = [
+  { id: 1, title: "Weekly Focus Plan", folder: "Personal", time: "07:53" },
+  { id: 2, title: "April Budget Snapshot", folder: "Finance", time: "07:53" },
+  { id: 3, title: "Postgres Search Notes", folder: "Learning", time: "15:14" },
+];
+
 export function Tasks() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [activeSheet, setActiveSheet] = useState<'priority' | 'status' | 'date' | 'label' | 'link' | null>(null);
   
   // Filter state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -49,12 +57,12 @@ export function Tasks() {
       High: "text-orange-400 border-orange-500/30 bg-orange-500/10",
       Urgent: "text-red-400 border-red-500/30 bg-red-500/10",
     };
-    return <span className={cn("text-[9px] px-2 py-0.5 rounded-full border font-semibold uppercase tracking-wider", colors[p] || "text-slate-400 border-slate-500/20 bg-slate-500/10")}>{p}</span>;
+    return <span className={cn("text-[10px] px-2.5 py-1 rounded-full border font-bold uppercase tracking-wide", colors[p] || "text-slate-400 border-slate-500/20 bg-slate-500/10")}>{p}</span>;
   };
 
   const StatusBadge = ({ s }: { s: string }) => {
-    return <span className="text-[10px] px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-slate-300 font-medium flex items-center gap-1.5 shrink-0">
-      {s === 'Done' ? <CheckCircle2 size={12} className="text-emerald-400" /> : <Circle size={12} className="text-slate-500" />}
+    return <span className="text-[11px] px-3 py-1 rounded-full border border-slate-700/60 bg-slate-800/40 text-slate-300 font-medium flex items-center gap-1.5 shrink-0">
+      {s === 'Done' ? <CheckCircle2 size={13} className="text-emerald-400" /> : <Circle size={13} className="text-slate-500" />}
       {s}
     </span>;
   };
@@ -206,14 +214,14 @@ export function Tasks() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">Priority</label>
-                    <button className="w-full flex items-center justify-between bg-slate-900/50 border border-slate-800 px-4 py-3 rounded-2xl text-[14px] text-slate-300">
+                    <button onClick={() => setActiveSheet('priority')} className="w-full flex items-center justify-between bg-[#0b101b] border border-slate-800/80 px-4 py-3 rounded-2xl text-[14px] text-slate-300 active:bg-slate-900 transition-colors">
                       <PriorityBadge p={selectedTask.priority} />
                       <ChevronLeft size={16} className="text-slate-600 rotate-180" />
                     </button>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">Status</label>
-                    <button className="w-full flex items-center justify-between bg-slate-900/50 border border-slate-800 px-4 py-3 rounded-2xl text-[14px] text-slate-300">
+                    <button onClick={() => setActiveSheet('status')} className="w-full flex items-center justify-between bg-[#0b101b] border border-slate-800/80 px-4 py-3 rounded-2xl text-[14px] text-slate-300 active:bg-slate-900 transition-colors">
                       <StatusBadge s={selectedTask.status} />
                       <ChevronLeft size={16} className="text-slate-600 rotate-180" />
                     </button>
@@ -222,9 +230,9 @@ export function Tasks() {
 
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">Due Date</label>
-                  <button className="w-full flex items-center justify-between bg-slate-900/50 border border-slate-800 px-4 py-3 rounded-2xl text-[14px] text-slate-300">
-                    <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-indigo-400" />
+                  <button onClick={() => setActiveSheet('date')} className="w-full flex items-center justify-between bg-[#0b101b] border border-slate-800/80 px-4 py-3 rounded-2xl text-[14px] text-slate-300 active:bg-slate-900 transition-colors">
+                    <div className="flex items-center gap-2 font-medium text-slate-200">
+                      <Calendar size={16} className="text-indigo-500" />
                       {selectedTask.date}
                     </div>
                     <ChevronLeft size={16} className="text-slate-600 rotate-180" />
@@ -240,15 +248,15 @@ export function Tasks() {
                         <button className="w-4 h-4 rounded-full hover:bg-indigo-500/20 flex items-center justify-center text-indigo-400"><X size={10} /></button>
                       </span>
                     ))}
-                    <button className="px-3 py-1.5 rounded-full border border-dashed border-slate-700 bg-slate-900/50 text-slate-400 text-[13px] font-medium flex items-center gap-1 active:bg-slate-800">
+                    <button onClick={() => setActiveSheet('label')} className="px-3 py-1.5 rounded-full border border-dashed border-slate-700 bg-transparent text-slate-400 text-[13px] font-medium flex items-center gap-1.5 active:bg-slate-900 transition-colors">
                       <Plus size={14} /> Add label
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-800">
+                <div className="pt-6 border-t border-slate-800/50 mt-2">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Linked Notes</label>
-                  <button className="w-full py-4 rounded-2xl border border-slate-800 border-dashed bg-slate-900/20 text-orange-400 text-[14px] font-medium flex items-center justify-center gap-2 active:bg-slate-900/50 transition-colors">
+                  <button onClick={() => setActiveSheet('link')} className="w-full py-4 rounded-2xl border border-slate-800 border-dashed bg-transparent text-orange-400 text-[14px] font-medium flex items-center justify-center gap-2 active:bg-slate-900 transition-colors hover:bg-slate-900/30">
                     <Plus size={16} /> Link a note
                   </button>
                 </div>
@@ -339,6 +347,163 @@ export function Tasks() {
               >
                 Show {filteredTasks.length} Tasks
               </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Action Bottom Sheets */}
+      <AnimatePresence>
+        {activeSheet && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveSheet(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 inset-x-0 bg-slate-900 rounded-t-[32px] border-t border-slate-800 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-[70] p-6 flex flex-col pb-safe max-h-[80vh] overflow-hidden"
+            >
+              <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6 shrink-0" />
+              
+              {activeSheet === 'priority' && (
+                <>
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Select Priority</h3>
+                  </div>
+                  <div className="space-y-2 overflow-y-auto">
+                    {PRIORITIES.map(p => (
+                      <button 
+                        key={p} 
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full text-left px-4 py-3.5 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors"
+                      >
+                        <PriorityBadge p={p} />
+                        {selectedTask?.priority === p && <Check size={18} className="text-indigo-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeSheet === 'status' && (
+                <>
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Select Status</h3>
+                  </div>
+                  <div className="space-y-2 overflow-y-auto">
+                    {STATUSES.map(s => (
+                      <button 
+                        key={s} 
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full text-left px-4 py-3.5 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors"
+                      >
+                        <StatusBadge s={s} />
+                        {selectedTask?.status === s && <Check size={18} className="text-indigo-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeSheet === 'date' && (
+                <>
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Select Due Date</h3>
+                  </div>
+                  <div className="space-y-2 overflow-y-auto">
+                    {["Today", "Tomorrow", "Next Week", "No Date"].map(d => (
+                      <button 
+                        key={d} 
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full text-left px-4 py-4 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors text-[15px] font-medium text-slate-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Calendar size={18} className="text-slate-500" />
+                          {d}
+                        </div>
+                        {(d === "Tomorrow" && selectedTask?.date === "Tomorrow") && <Check size={18} className="text-indigo-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeSheet === 'label' && (
+                <>
+                  <div className="flex items-center justify-between mb-4 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Add Label</h3>
+                  </div>
+                  <div className="relative mb-6 shrink-0">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search or create..." 
+                      className="w-full bg-[#0b101b] border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-[15px] placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all text-slate-200"
+                    />
+                  </div>
+                  <div className="space-y-2 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {AVAILABLE_TAGS.map(tag => {
+                      const isSelected = selectedTask?.tags.includes(tag);
+                      return (
+                        <button 
+                          key={tag} 
+                          onClick={() => setActiveSheet(null)}
+                          className="w-full text-left px-4 py-3 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors"
+                        >
+                          <span className="text-[13px] font-medium text-slate-200 flex items-center gap-2.5">
+                            <Tag size={16} className={isSelected ? "text-indigo-400" : "text-slate-500"} />
+                            {tag}
+                          </span>
+                          {isSelected && <Check size={16} className="text-indigo-400" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {activeSheet === 'link' && (
+                <>
+                  <div className="flex items-center justify-between mb-4 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Link a Note</h3>
+                  </div>
+                  <div className="relative mb-6 shrink-0">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search notes..." 
+                      className="w-full bg-[#0b101b] border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-[15px] placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all text-slate-200"
+                    />
+                  </div>
+                  <div className="space-y-2.5 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {AVAILABLE_NOTES.map(note => (
+                      <button 
+                        key={note.id} 
+                        onClick={() => setActiveSheet(null)}
+                        className="w-full text-left p-4 rounded-2xl bg-[#0b101b] border border-slate-800 active:bg-slate-800 transition-colors flex flex-col gap-1.5"
+                      >
+                        <h4 className="font-semibold text-[14px] text-slate-200 truncate">{note.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+                            <Clock size={10} /> {note.time}
+                          </span>
+                          <span className="w-1 h-1 rounded-full bg-slate-700" />
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">
+                            {note.folder}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
           </>
         )}

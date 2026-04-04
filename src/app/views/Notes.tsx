@@ -14,6 +14,10 @@ export function Notes() {
   const [selectedNote, setSelectedNote] = useState<any>(null);
   const [activeFolder, setActiveFolder] = useState("All");
   const [isGridView, setIsGridView] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<'folder' | 'tag' | null>(null);
+
+  const AVAILABLE_FOLDERS = ["Learning", "Finance", "Personal", "Product", "Design"];
+  const AVAILABLE_TAGS = ["Research", "Engineering", "Health", "Planning", "Draft"];
 
   return (
     <div className="flex-1 flex flex-col bg-slate-950 relative overflow-hidden">
@@ -151,6 +155,7 @@ export function Notes() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             whileTap={{ scale: 0.9 }}
+            onClick={() => setSelectedNote({ title: "", content: "", folder: null, tags: [], isPinned: false, isNew: true })}
             className="absolute bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(79,70,229,0.4)] z-30"
           >
             <Plus size={24} strokeWidth={2.5} />
@@ -172,40 +177,60 @@ export function Notes() {
             <div className="h-14 px-4 flex items-center justify-between border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-md shrink-0">
               <button 
                 onClick={() => setSelectedNote(null)}
-                className="flex items-center gap-1 text-slate-400 font-medium active:text-white transition-colors p-2 -ml-2"
+                className="flex items-center gap-1 text-indigo-400 font-medium active:opacity-70 transition-opacity p-2 -ml-2 text-[15px]"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={20} /> Back
               </button>
               <div className="flex items-center gap-2">
-                <button className={cn("w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform", selectedNote.isPinned ? "text-orange-400 bg-orange-500/10" : "text-slate-400 hover:bg-slate-800")}>
+                <button 
+                  onClick={() => setSelectedNote({...selectedNote, isPinned: !selectedNote.isPinned})}
+                  className={cn("w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform", selectedNote.isPinned ? "text-orange-400 bg-orange-500/10" : "text-slate-400 hover:bg-slate-800")}
+                >
                   <Pin size={18} fill={selectedNote.isPinned ? "currentColor" : "none"} />
                 </button>
-                <button className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-800 transition-colors">
-                  <MoreVertical size={18} />
-                </button>
+                {selectedNote.isNew ? (
+                  <button onClick={() => setSelectedNote(null)} className="px-3 py-1.5 bg-indigo-600 text-white rounded-full text-[13px] font-medium active:scale-95 transition-transform">
+                    Save
+                  </button>
+                ) : (
+                  <button className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-800 transition-colors">
+                    <MoreVertical size={18} />
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <input 
                 type="text" 
-                defaultValue={selectedNote.title} 
+                defaultValue={selectedNote.title}
+                autoFocus={selectedNote.isNew}
                 className="w-full bg-transparent text-3xl font-bold text-white focus:outline-none mb-4 placeholder:text-slate-700"
-                placeholder="Title"
+                placeholder="Note Title"
               />
 
               <div className="flex gap-2 flex-wrap mb-8">
-                {selectedNote.folder && (
-                  <span className="pl-3 pr-2 py-1.5 rounded-full border border-slate-700 bg-slate-800/50 text-slate-300 text-[12px] font-medium flex items-center gap-1.5">
-                    <Folder size={12} /> {selectedNote.folder} <X size={10} className="ml-1 opacity-50" />
-                  </span>
+                {selectedNote.folder ? (
+                  <button onClick={() => setActiveSheet('folder')} className="pl-3 pr-2 py-1.5 rounded-full border border-slate-700 bg-slate-800/50 text-slate-300 text-[12px] font-medium flex items-center gap-1.5 active:bg-slate-800 transition-colors">
+                    <Folder size={12} /> {selectedNote.folder}
+                  </button>
+                ) : (
+                  <button onClick={() => setActiveSheet('folder')} className="px-3 py-1.5 rounded-full border border-dashed border-slate-700 text-slate-400 text-[12px] font-medium flex items-center gap-1.5 active:bg-slate-800 transition-colors">
+                    <Folder size={12} /> Add Folder
+                  </button>
                 )}
                 {selectedNote.tags.map((tag: string) => (
                   <span key={tag} className="pl-3 pr-2 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 text-[12px] font-medium flex items-center gap-1.5">
-                    <Tag size={12} /> {tag} <X size={10} className="ml-1 opacity-50" />
+                    <Tag size={12} /> {tag}
+                    <button 
+                      onClick={() => setSelectedNote({...selectedNote, tags: selectedNote.tags.filter((t:string) => t !== tag)})}
+                      className="w-4 h-4 rounded-full hover:bg-indigo-500/20 flex items-center justify-center -mr-1 active:scale-90"
+                    >
+                      <X size={10} />
+                    </button>
                   </span>
                 ))}
-                <button className="w-8 h-8 rounded-full border border-dashed border-slate-700 text-slate-400 flex items-center justify-center active:bg-slate-800">
+                <button onClick={() => setActiveSheet('tag')} className="w-8 h-8 rounded-full border border-dashed border-slate-700 text-slate-400 flex items-center justify-center active:bg-slate-800 transition-colors">
                   <Plus size={14} />
                 </button>
               </div>
@@ -227,6 +252,98 @@ export function Notes() {
               <button className="font-bold text-[14px] text-indigo-400 active:opacity-70">Done</button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action Bottom Sheets */}
+      <AnimatePresence>
+        {activeSheet && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveSheet(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 inset-x-0 bg-slate-900 rounded-t-[32px] border-t border-slate-800 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-[70] p-6 flex flex-col pb-safe max-h-[80vh] overflow-hidden"
+            >
+              <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6 shrink-0" />
+              
+              {activeSheet === 'folder' && (
+                <>
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Select Folder</h3>
+                  </div>
+                  <div className="space-y-2 overflow-y-auto">
+                    {AVAILABLE_FOLDERS.map(f => (
+                      <button 
+                        key={f} 
+                        onClick={() => {
+                          if(selectedNote) setSelectedNote({...selectedNote, folder: f});
+                          setActiveSheet(null);
+                        }}
+                        className="w-full text-left px-4 py-3.5 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors text-slate-300"
+                      >
+                        <span className="flex items-center gap-3">
+                          <Folder size={18} className="text-slate-500" />
+                          {f}
+                        </span>
+                        {selectedNote?.folder === f && <Check size={18} className="text-indigo-400" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {activeSheet === 'tag' && (
+                <>
+                  <div className="flex items-center justify-between mb-4 shrink-0">
+                    <h3 className="text-lg font-bold text-white">Add Tag</h3>
+                  </div>
+                  <div className="relative mb-6 shrink-0">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search or create tag..." 
+                      className="w-full bg-[#0b101b] border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-[15px] placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 transition-all text-slate-200"
+                    />
+                  </div>
+                  <div className="space-y-2 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {AVAILABLE_TAGS.map(tag => {
+                      const isSelected = selectedNote?.tags?.includes(tag);
+                      return (
+                        <button 
+                          key={tag} 
+                          onClick={() => {
+                            if(selectedNote) {
+                              const newTags = isSelected 
+                                ? selectedNote.tags.filter((t: string) => t !== tag)
+                                : [...(selectedNote.tags || []), tag];
+                              setSelectedNote({...selectedNote, tags: newTags});
+                            }
+                            setActiveSheet(null);
+                          }}
+                          className="w-full text-left px-4 py-3 rounded-2xl bg-[#0b101b] border border-slate-800 flex items-center justify-between active:bg-slate-800 transition-colors"
+                        >
+                          <span className="text-[13px] font-medium text-slate-200 flex items-center gap-2.5">
+                            <Tag size={16} className={isSelected ? "text-indigo-400" : "text-slate-500"} />
+                            {tag}
+                          </span>
+                          {isSelected && <Check size={16} className="text-indigo-400" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
