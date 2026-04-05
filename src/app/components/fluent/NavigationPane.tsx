@@ -4,14 +4,17 @@ import {
   CheckCircle2,
   FileText,
   Calendar,
-  Search
+  Plus,
+  Bell,
+  Activity,
+  Timer,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
 export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const [activeTab, setActiveTab] = useState("Home");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("Velocity");
+  const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
 
   return (
     <div 
@@ -20,161 +23,52 @@ export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean 
         isCollapsed ? "w-[72px]" : "w-[260px]"
       )}
     >
-      {/* Backdrop for closing popups */}
-      {isSearchOpen && (
+      {/* Backdrop for New Menu */}
+      {isNewMenuOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/5" 
-          onClick={() => setIsSearchOpen(false)} 
+          className="fixed inset-0 z-40 bg-transparent" 
+          onClick={() => setIsNewMenuOpen(false)} 
         />
       )}
 
-      {/* Top Branding */}
+      {/* Top Action Area (Quick Create) */}
       <div className={cn(
-        "pt-6 transition-all duration-300 overflow-hidden whitespace-nowrap flex flex-col gap-0.5",
-        isCollapsed ? "px-0 h-0 opacity-0 mb-4" : "px-6 h-[72px] opacity-100 mb-2"
+        "pt-6 pb-4 transition-all duration-300 shrink-0 relative z-50",
+        isCollapsed ? "px-4 mx-auto w-full flex justify-center" : "px-5 w-full"
       )}>
-        <span className="text-slate-100 font-bold tracking-wide text-[15px]">Midnight Velocity</span>
-        <span className="text-[#8F95A3] font-medium text-[11px]">Digital Sanctuary</span>
-      </div>
-
-      {/* Search Box in Sidebar */}
-      <div className={cn(
-        "mb-4 transition-all duration-300 shrink-0 relative z-50",
-        isCollapsed ? "px-4 mx-auto w-10" : "px-4 w-full"
-      )}>
-        <div className="relative group flex items-center w-full">
-          <div className={cn(
-            "absolute text-[#8F95A3] group-focus-within:text-indigo-400 transition-colors z-10 pointer-events-none",
-            isCollapsed ? "left-1/2 -translate-x-1/2" : "left-3"
-          )}>
-            <Search className="w-[15px] h-[15px]" strokeWidth={2.5} />
-          </div>
-          {isCollapsed ? (
-            <button 
-              onClick={() => setIsSearchOpen(true)}
-              className="w-10 h-10 bg-[#121622] rounded-[10px] border border-white/5 hover:bg-[#161B28] transition-all shadow-inner flex items-center justify-center focus:outline-none focus:border-indigo-500/50" 
-            />
-          ) : (
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchOpen(true)}
-              placeholder="Search..."
-              className="w-full h-[42px] bg-[#121622] text-[13px] text-slate-200 placeholder:text-[#6B7280] rounded-xl pl-9 pr-3 outline-none border border-white/5 focus:border-indigo-500/50 focus:bg-[#161B28] transition-all shadow-inner"
-            />
+        <button
+          onClick={() => setIsNewMenuOpen(!isNewMenuOpen)}
+          className={cn(
+            "h-[42px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center group focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+            isCollapsed ? "w-10 rounded-[10px]" : "w-full px-4 justify-between"
           )}
-        </div>
+        >
+          <div className="flex items-center gap-2.5">
+            <Plus className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+            {!isCollapsed && <span className="font-semibold text-[13px] tracking-wide">New Action</span>}
+          </div>
+          {!isCollapsed && <ChevronDown className={cn("w-4 h-4 text-indigo-200 transition-transform", isNewMenuOpen && "rotate-180")} />}
+        </button>
 
-        {/* Search Results Dialog (Attached to Search Input) */}
-        {isSearchOpen && (
+        {/* New Menu Dropdown */}
+        {isNewMenuOpen && (
           <div 
-            className="absolute top-0 left-[calc(100%+16px)] w-[480px] bg-[#121622] rounded-xl border border-white/5 shadow-2xl z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-left-2 duration-200"
-            style={{
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05)"
-            }}
+            className={cn(
+              "absolute top-[calc(100%-8px)] bg-[#161B28] border border-white/10 rounded-xl shadow-2xl z-50 py-2 flex flex-col animate-in fade-in zoom-in-95 duration-200",
+              isCollapsed ? "left-[calc(100%+8px)] w-[220px]" : "left-5 right-5 w-[calc(100%-40px)]"
+            )}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-4 pb-3">
-              <span className="text-[11px] font-bold tracking-widest text-[#8F95A3] uppercase">Search Results</span>
-              <div className="bg-white/5 border border-white/10 rounded px-2.5 py-0.5 text-[11px] text-slate-300 font-medium">
-                "{searchQuery || "Velocity"}"
-              </div>
+            <div className="px-3 pb-2 mb-1.5 border-b border-white/5">
+              <span className="text-[10px] font-bold tracking-widest text-[#8F95A3] uppercase">Create New</span>
             </div>
-
-            {/* Scrollable Results Area */}
-            <div className="flex flex-col overflow-y-auto max-h-[500px] custom-scrollbar">
-              
-              {/* Tasks Section */}
-              <div className="flex flex-col px-3 pb-2">
-                <div className="px-2 py-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-[15px] h-[15px] text-[#F59E0B]" strokeWidth={2.5} />
-                  <span className="text-[12px] font-bold text-slate-200">Tasks</span>
-                </div>
-                
-                <div className="flex flex-col gap-0.5">
-                  <button className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group">
-                    <div className="w-4 h-4 rounded-[4px] border border-white/20 mt-0.5 group-hover:border-white/40 transition-colors shrink-0" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[13px] text-slate-200 font-medium">Complete Velocity audit for Q4</span>
-                      <span className="text-[11.5px] text-[#64748B]">Project Aether • Due Tomorrow</span>
-                    </div>
-                  </button>
-                  
-                  <button className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group">
-                    <div className="w-4 h-4 rounded-[4px] border border-white/20 mt-0.5 group-hover:border-white/40 transition-colors shrink-0" />
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[13px] text-slate-200 font-medium">Sync velocity metrics with Engineering</span>
-                      <span className="text-[11.5px] text-[#64748B]">Performance Review • Next Week</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Notes Section */}
-              <div className="flex flex-col px-3 pb-4">
-                <div className="px-2 py-3 flex items-center gap-2 mt-1">
-                  <FileText className="w-[15px] h-[15px] text-[#FDE047]" strokeWidth={2.5} />
-                  <span className="text-[12px] font-bold text-slate-200">Notes</span>
-                </div>
-
-                <div className="flex flex-col gap-0.5">
-                  <button className="flex flex-col gap-1 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[13px] text-slate-200 font-medium">Velocity System Architecture</span>
-                      <span className="text-[11px] text-[#64748B]">2h ago</span>
-                    </div>
-                    <span className="text-[12px] text-[#8F95A3] truncate w-full leading-relaxed">
-                      Revised the core engine parameters to allow for higher...
-                    </span>
-                  </button>
-
-                  <button className="flex flex-col gap-1 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[13px] text-slate-200 font-medium">Meeting Notes: Speed vs Velocity</span>
-                      <span className="text-[11px] text-[#64748B]">Yesterday</span>
-                    </div>
-                    <span className="text-[12px] text-[#8F95A3] truncate w-full leading-relaxed">
-                      Discussion on the directional component of our growth metrics...
-                    </span>
-                  </button>
-                  
-                  <button className="flex flex-col gap-1 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[13px] text-slate-200 font-medium">Weekly Velocity Report Template</span>
-                      <span className="text-[11px] text-[#64748B]">Oct 12</span>
-                    </div>
-                    <span className="text-[12px] text-[#8F95A3] truncate w-full leading-relaxed">
-                      Standardized reporting format for all cross-functional squads...
-                    </span>
-                  </button>
-                </div>
-              </div>
-
+            
+            <div className="flex flex-col px-1.5 gap-0.5">
+              <MenuOption icon={CheckCircle2} label="Task" color="text-[#6366F1]" shortcut="⌘T" />
+              <MenuOption icon={FileText} label="Note" color="text-[#F59E0B]" shortcut="⌘N" />
+              <MenuOption icon={Bell} label="Reminder" color="text-[#10B981]" shortcut="⌘R" />
+              <MenuOption icon={Activity} label="Habit" color="text-[#EC4899]" shortcut="⌘H" />
+              <MenuOption icon={Timer} label="Focus Session" color="text-[#8B5CF6]" shortcut="⌘F" />
             </div>
-
-            {/* Footer / Shortcuts */}
-            <div className="flex items-center justify-between px-5 py-3 border-t border-white/5 bg-[#0F1423]/60 shrink-0">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-0.5">
-                    <kbd className="flex items-center justify-center h-5 px-1 min-w-[20px] bg-white/5 border border-white/10 rounded-[4px] text-[10px] text-slate-400 font-sans shadow-sm">↑</kbd>
-                    <kbd className="flex items-center justify-center h-5 px-1 min-w-[20px] bg-white/5 border border-white/10 rounded-[4px] text-[10px] text-slate-400 font-sans shadow-sm">↓</kbd>
-                  </div>
-                  <span className="text-[11px] text-[#64748B] font-medium tracking-wide">Navigate</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <kbd className="flex items-center justify-center h-5 px-1 min-w-[20px] bg-white/5 border border-white/10 rounded-[4px] text-[10px] text-slate-400 font-sans shadow-sm">↵</kbd>
-                  <span className="text-[11px] text-[#64748B] font-medium tracking-wide">Open</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-[#64748B] font-medium tracking-wide">Press</span>
-                <kbd className="flex items-center justify-center h-5 px-1.5 min-w-[24px] bg-white/5 border border-white/10 rounded-[4px] text-[10px] text-slate-400 font-sans shadow-sm tracking-widest">ESC</kbd>
-                <span className="text-[11px] text-[#64748B] font-medium tracking-wide">to close</span>
-              </div>
-            </div>
-
           </div>
         )}
       </div>
@@ -194,6 +88,18 @@ export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean 
 }
 
 // Subcomponents
+function MenuOption({ icon: Icon, label, color, shortcut }: { icon: any, label: string, color: string, shortcut: string }) {
+  return (
+    <button className="flex items-center justify-between px-2.5 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-left group w-full">
+      <div className="flex items-center gap-3">
+        <Icon className={cn("w-4 h-4", color)} strokeWidth={2.5} />
+        <span className="text-[13px] text-slate-200 font-medium group-hover:text-white transition-colors">{label}</span>
+      </div>
+      <kbd className="text-[10px] text-[#64748B] font-sans tracking-widest group-hover:text-[#8F95A3] transition-colors">{shortcut}</kbd>
+    </button>
+  );
+}
+
 function NavItem({
   icon: Icon,
   label,
