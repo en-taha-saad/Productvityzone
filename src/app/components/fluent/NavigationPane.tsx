@@ -4,10 +4,9 @@ import {
   CheckCircle2,
   FileText,
   Calendar,
-  Settings
+  Search
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
-import { ImageWithFallback } from "../figma/ImageWithFallback";
 
 export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const [activeTab, setActiveTab] = useState("Home");
@@ -21,37 +20,32 @@ export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean 
     >
       {/* Top Branding */}
       <div className={cn(
-        "pt-6 pb-2 transition-all duration-300 overflow-hidden whitespace-nowrap",
-        isCollapsed ? "px-0 h-0 opacity-0" : "px-6 h-[52px] opacity-100"
+        "pt-6 transition-all duration-300 overflow-hidden whitespace-nowrap",
+        isCollapsed ? "px-0 h-0 opacity-0 mb-4" : "px-6 h-[64px] opacity-100 mb-2"
       )}>
         <span className="text-indigo-400 font-semibold tracking-wide text-[15px]">Deep Nocturne</span>
       </div>
 
-      {/* User Profile */}
-      <div className={cn("mb-6 transition-all duration-300", isCollapsed ? "px-0 mt-4" : "px-4 mt-0")}>
-        <div className={cn(
-          "flex items-center rounded-xl hover:bg-white/5 cursor-pointer transition-colors relative mx-auto",
-          isCollapsed ? "justify-center w-12 h-12" : "gap-3 p-2 w-full"
-        )}>
-          <div className="relative flex items-center justify-center">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop"
-              alt="Alex Rivers"
-              className={cn(
-                "rounded-lg object-cover bg-slate-800 shrink-0 transition-all duration-300",
-                isCollapsed ? "w-9 h-9" : "w-10 h-10"
-              )}
-            />
-            {isCollapsed && (
-              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10B981] border-2 border-[#0A0D14] rounded-full" />
-            )}
+      {/* Search Box in Sidebar */}
+      <div className={cn(
+        "mb-4 transition-all duration-300 shrink-0",
+        isCollapsed ? "px-4 mx-auto w-10" : "px-4 w-full"
+      )}>
+        <div className="relative group flex items-center w-full">
+          <div className={cn(
+            "absolute text-[#8F95A3] group-focus-within:text-indigo-400 transition-colors z-10",
+            isCollapsed ? "left-1/2 -translate-x-1/2" : "left-3"
+          )}>
+            <Search className="w-[16px] h-[16px]" />
           </div>
-          
-          {!isCollapsed && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-slate-100 font-semibold text-[14px] leading-tight truncate">Alex Rivers</span>
-              <span className="text-indigo-400 font-bold text-[10px] tracking-[0.05em] uppercase mt-0.5 truncate">PRO PLAN</span>
-            </div>
+          {isCollapsed ? (
+            <button className="w-10 h-10 bg-[#121622] rounded-[10px] border border-white/5 hover:bg-[#161B28] transition-all shadow-inner" />
+          ) : (
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full h-9 bg-[#121622] text-[13px] text-slate-200 placeholder:text-[#6B7280] rounded-[10px] pl-9 pr-3 outline-none border border-transparent focus:border-indigo-500/30 focus:bg-[#161B28] transition-all shadow-inner"
+            />
           )}
         </div>
       </div>
@@ -65,10 +59,6 @@ export function NavigationPane({ isCollapsed = false }: { isCollapsed?: boolean 
           <NavItem icon={FileText} label="Notes" isCollapsed={isCollapsed} active={activeTab === "Notes"} onClick={() => setActiveTab("Notes")} />
           <NavItem icon={Calendar} label="Planner" isCollapsed={isCollapsed} active={activeTab === "Planner"} onClick={() => setActiveTab("Planner")} />
         </nav>
-
-      <div className={cn("mt-auto pb-6 transition-all duration-300", isCollapsed ? "px-0" : "px-3")}>
-        <NavItem icon={Settings} label="Settings" isCollapsed={isCollapsed} active={activeTab === "Settings"} onClick={() => setActiveTab("Settings")} />
-      </div>
       </div>
     </div>
   );
